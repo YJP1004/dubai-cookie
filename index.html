@@ -1,0 +1,974 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>두바이쫀득쿠키 타이쿤</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 20px;
+            padding-bottom: 50px;
+        }
+
+        .game-container {
+            background: #fff;
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 500px;
+            width: 90%;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .money {
+            font-size: 28px;
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-bottom: 20px;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .workstation {
+            background: linear-gradient(145deg, #f5e6d3, #e8d4bc);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 3px solid #c9a66b;
+        }
+
+        .stage-display {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .stage-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #8b4513;
+            margin-bottom: 5px;
+        }
+
+        .stage-instruction {
+            font-size: 18px;
+            color: #666;
+        }
+
+        .cookie-visual {
+            width: 180px;
+            height: 180px;
+            margin: 20px auto;
+            border-radius: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 60px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-color: #f5e6d3;
+        }
+
+        .cookie-visual:hover {
+            transform: scale(1.05);
+        }
+
+        .cookie-visual:active {
+            transform: scale(0.95);
+        }
+
+        /* 단계별 쿠키 비주얼 - 이미지 사용 */
+        .stage-empty { background-image: url('images/cookie.png'); }
+        .stage-flatten { background-image: url('images/step1.png'); }
+        .stage-filling { background-image: url('images/step2.png'); }
+        .stage-rolling { background-image: url('images/step3.png'); }
+        .stage-powder { background-image: url('images/step4.png'); }
+        .stage-complete { background-image: url('images/cookie.png'); box-shadow: 0 0 30px gold; }
+
+        /* 타이밍 바 */
+        .timing-container {
+            display: none;
+            margin: 15px 0;
+        }
+
+        .timing-container.active {
+            display: block;
+        }
+
+        .timing-bar {
+            height: 30px;
+            background: #eee;
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .timing-zones {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            display: flex;
+        }
+
+        .zone {
+            height: 100%;
+        }
+
+        .zone-bad { background: #e74c3c; flex: 1; }
+        .zone-normal { background: #f39c12; flex: 1; }
+        .zone-good { background: #3498db; flex: 1; }
+        .zone-perfect { background: #2ecc71; flex: 1; }
+        .zone-good2 { background: #3498db; flex: 1; }
+        .zone-normal2 { background: #f39c12; flex: 1; }
+        .zone-bad2 { background: #e74c3c; flex: 1; }
+
+        .timing-indicator {
+            position: absolute;
+            width: 6px;
+            height: 100%;
+            background: #333;
+            top: 0;
+            left: 0;
+            transition: left 0.05s linear;
+        }
+
+        .timing-label {
+            text-align: center;
+            margin-top: 5px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* 당기기 게이지 */
+        .pull-container {
+            display: none;
+            margin: 15px 0;
+        }
+
+        .pull-container.active {
+            display: block;
+        }
+
+        .pull-bar {
+            height: 30px;
+            background: #eee;
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pull-progress {
+            height: 100%;
+            background: linear-gradient(90deg, #e74c3c, #f39c12, #2ecc71);
+            width: 0%;
+            transition: width 0.1s;
+            border-radius: 15px;
+        }
+
+        .pull-label {
+            text-align: center;
+            margin-top: 5px;
+            font-size: 12px;
+            color: #666;
+        }
+
+        /* 재료 버튼 (2단계) */
+        .ingredient-container {
+            display: none;
+            margin: 15px 0;
+        }
+
+        .ingredient-container.active {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .ingredient-btn {
+            padding: 15px 20px;
+            font-size: 16px;
+            border: 3px solid #ddd;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .ingredient-btn:hover {
+            transform: scale(1.05);
+            border-color: #3498db;
+        }
+
+        .ingredient-btn.added {
+            background: #2ecc71;
+            border-color: #27ae60;
+            color: white;
+            transform: scale(0.95);
+        }
+
+        .ingredient-btn.added:hover {
+            transform: scale(0.95);
+        }
+
+        .ingredient-icon {
+            font-size: 30px;
+        }
+
+        .ingredient-name {
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        /* 파우더 탭 (4단계) */
+        .powder-container {
+            display: none;
+            margin: 15px 0;
+            text-align: center;
+        }
+
+        .powder-container.active {
+            display: block;
+        }
+
+        .powder-progress {
+            height: 30px;
+            background: #eee;
+            border-radius: 15px;
+            position: relative;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .powder-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #8b4513, #d2691e);
+            width: 0%;
+            transition: width 0.1s;
+            border-radius: 15px;
+        }
+
+        .powder-tap-btn {
+            padding: 20px 40px;
+            font-size: 20px;
+            background: linear-gradient(145deg, #8b4513, #a0522d);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+
+        .powder-tap-btn:active {
+            transform: scale(0.9);
+        }
+
+        .powder-label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        /* 당기기 중 이미지 효과 - 늘어남 없이 살짝 흔들림만 */
+        .cookie-visual.pulling {
+            animation: shake 0.1s infinite;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(3px); }
+        }
+
+        /* 액션 버튼 */
+        .action-btn {
+            width: 100%;
+            padding: 15px;
+            font-size: 18px;
+            font-weight: bold;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-top: 10px;
+        }
+
+        .action-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .action-btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: linear-gradient(145deg, #e74c3c, #c0392b);
+            color: white;
+        }
+
+        .btn-sell {
+            background: linear-gradient(145deg, #2ecc71, #27ae60);
+            color: white;
+        }
+
+        .btn-disabled {
+            background: #ccc;
+            color: #666;
+            cursor: not-allowed;
+        }
+
+        /* 손님 영역 */
+        .customer-area {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+
+        .customer-title {
+            font-size: 14px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        .customer {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+
+        .customer-emoji {
+            font-size: 30px;
+        }
+
+        .customer-info {
+            flex: 1;
+        }
+
+        .customer-order {
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .customer-patience {
+            height: 6px;
+            background: #eee;
+            border-radius: 3px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+
+        .patience-bar {
+            height: 100%;
+            background: #2ecc71;
+            transition: width 0.5s, background 0.5s;
+        }
+
+        .customer-reward {
+            font-weight: bold;
+            color: #e74c3c;
+        }
+
+        .no-customer {
+            text-align: center;
+            color: #999;
+            padding: 20px;
+        }
+
+        /* 완성된 쿠키 저장소 */
+        .cookie-storage {
+            display: flex;
+            gap: 5px;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .stored-cookie {
+            width: 50px;
+            height: 50px;
+            border-radius: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: transform 0.2s;
+            background-image: url('images/cookie.png');
+            background-size: contain;
+            background-repeat: no-repeat;
+            background-position: center;
+            border: 3px solid transparent;
+        }
+
+        .stored-cookie:hover {
+            transform: scale(1.2);
+        }
+
+        .cookie-perfect { border-color: gold; box-shadow: 0 0 10px gold; }
+        .cookie-good { border-color: #3498db; box-shadow: 0 0 10px #3498db; }
+        .cookie-normal { border-color: #f39c12; box-shadow: 0 0 10px #f39c12; }
+        .cookie-failed { border-color: #95a5a6; opacity: 0.7; }
+
+        /* 배너 */
+        .banner {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        .banner a {
+            display: block;
+            padding: 20px 30px;
+            background: linear-gradient(145deg, #6B3E2E, #4E2A1E);
+            color: white;
+            text-decoration: none;
+            border-radius: 15px;
+            font-size: 28px;
+            font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transition: all 0.2s;
+        }
+
+        .banner a:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+        }
+
+        .banner a:active {
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="header">
+            <h1>두바이쫀득쿠키 타이쿤</h1>
+            <div class="money" id="money">0원</div>
+        </div>
+
+        <div class="stats">
+            <span>만든 쿠키: <strong id="totalCookies">0</strong>개</span>
+            <span>서빙: <strong id="totalServed">0</strong>명</span>
+        </div>
+
+        <div class="workstation">
+            <div class="stage-display">
+                <div class="stage-title" id="stageTitle">작업대를 클릭하세요!</div>
+                <div class="stage-instruction" id="stageInstruction">두쫀쿠 만들기를 시작합니다</div>
+            </div>
+
+            <div class="cookie-visual stage-empty" id="cookieVisual" onclick="handleClick()">
+            </div>
+
+            <!-- 당기기 게이지 (1단계) -->
+            <div class="pull-container" id="pullContainer">
+                <div class="pull-bar">
+                    <div class="pull-progress" id="pullProgress"></div>
+                </div>
+                <div class="pull-label">⬇️ 아래로 쭉 당기세요!</div>
+            </div>
+
+            <!-- 재료 버튼 (2단계) -->
+            <div class="ingredient-container" id="ingredientContainer">
+                <button class="ingredient-btn" id="kadaifBtn" onclick="addIngredient('kadaif')">
+                    <span class="ingredient-icon">🌾</span>
+                    <span class="ingredient-name">카다이프</span>
+                </button>
+                <button class="ingredient-btn" id="pistachioBtn" onclick="addIngredient('pistachio')">
+                    <span class="ingredient-icon">💚</span>
+                    <span class="ingredient-name">피스타치오</span>
+                </button>
+            </div>
+
+            <!-- 파우더 탭 (4단계) -->
+            <div class="powder-container" id="powderContainer">
+                <div class="powder-progress">
+                    <div class="powder-fill" id="powderFill"></div>
+                </div>
+                <button class="powder-tap-btn" onclick="tapPowder()">🍫 톡톡!</button>
+                <div class="powder-label">버튼을 빠르게 탭하세요!</div>
+            </div>
+
+            <!-- 타이밍 게이지 (3단계) -->
+            <div class="timing-container" id="timingContainer">
+                <div class="timing-bar">
+                    <div class="timing-zones">
+                        <div class="zone zone-bad"></div>
+                        <div class="zone zone-normal"></div>
+                        <div class="zone zone-good"></div>
+                        <div class="zone zone-perfect"></div>
+                        <div class="zone zone-good2"></div>
+                        <div class="zone zone-normal2"></div>
+                        <div class="zone zone-bad2"></div>
+                    </div>
+                    <div class="timing-indicator" id="timingIndicator"></div>
+                </div>
+                <div class="timing-label">타이밍에 맞춰 클릭!</div>
+            </div>
+
+            <button class="action-btn btn-primary" id="actionBtn" onclick="handleClick()">
+                시작하기
+            </button>
+        </div>
+
+        <!-- 완성된 쿠키 -->
+        <div class="customer-area">
+            <div class="customer-title">완성된 쿠키 (클릭해서 판매)</div>
+            <div class="cookie-storage" id="cookieStorage">
+                <div class="no-customer">아직 완성된 쿠키가 없어요</div>
+            </div>
+        </div>
+
+        <!-- 손님 -->
+        <div class="customer-area">
+            <div class="customer-title">대기 중인 손님</div>
+            <div id="customerList">
+                <div class="no-customer">손님을 기다리는 중...</div>
+            </div>
+        </div>
+
+        <!-- 배너 -->
+        <div class="banner">
+            <a href="https://marpple.shop/kr/jjinggu" id="shopBanner" target="_blank">🛒 찡구샵 구경하기</a>
+        </div>
+        <div class="banner">
+            <a href="https://lottopick.kr/" id="shopBanner2" target="_blank">🎁 로또번호 생성기</a>
+        </div>
+    </div>
+
+    <script>
+        // 게임 상태
+        const game = {
+            money: 0,
+            totalCookies: 0,
+            totalServed: 0,
+            currentStage: 0, // 0: empty, 1: flatten, 2: filling, 3: rolling, 4: powder, 5: complete
+            completedCookies: [], // {quality: 'perfect'|'good'|'normal'|'failed', price: number}
+            customers: [],
+            timingValue: 0,
+            timingDirection: 1,
+            timingInterval: null,
+            maxCustomers: 3,
+            customerSpawnInterval: null,
+            // 당기기 관련
+            isPulling: false,
+            pullStartY: 0,
+            pullProgress: 0,
+            // 재료 관련 (2단계)
+            ingredients: { kadaif: false, pistachio: false },
+            // 파우더 관련 (4단계)
+            powderProgress: 0,
+            powderTarget: 10 // 10번 탭하면 완료
+        };
+
+        // 단계 정보
+        const stages = [
+            { title: '작업대를 클릭하세요!', instruction: '두쫀쿠 만들기를 시작합니다', btn: '시작하기' },
+            { title: '1단계: 떼어내기', instruction: '아래로 쭉 당겨서 마시멜로우를 떼어내세요!', btn: '' },
+            { title: '2단계: 내용물 올리기', instruction: '재료 버튼을 클릭하세요!', btn: '' },
+            { title: '3단계: 동그랗게 말기', instruction: '타이밍에 맞춰 클릭!', btn: '말기!' },
+            { title: '4단계: 파우더 뿌리기', instruction: '버튼을 빠르게 탭하세요!', btn: '' }
+        ];
+
+        // DOM 요소
+        const elements = {
+            money: document.getElementById('money'),
+            totalCookies: document.getElementById('totalCookies'),
+            totalServed: document.getElementById('totalServed'),
+            stageTitle: document.getElementById('stageTitle'),
+            stageInstruction: document.getElementById('stageInstruction'),
+            cookieVisual: document.getElementById('cookieVisual'),
+            actionBtn: document.getElementById('actionBtn'),
+            timingContainer: document.getElementById('timingContainer'),
+            timingIndicator: document.getElementById('timingIndicator'),
+            pullContainer: document.getElementById('pullContainer'),
+            pullProgress: document.getElementById('pullProgress'),
+            ingredientContainer: document.getElementById('ingredientContainer'),
+            kadaifBtn: document.getElementById('kadaifBtn'),
+            pistachioBtn: document.getElementById('pistachioBtn'),
+            powderContainer: document.getElementById('powderContainer'),
+            powderFill: document.getElementById('powderFill'),
+            cookieStorage: document.getElementById('cookieStorage'),
+            customerList: document.getElementById('customerList')
+        };
+
+        // 클릭 핸들러
+        function handleClick() {
+            switch (game.currentStage) {
+                case 0: // 시작
+                    startCooking();
+                    break;
+                case 1: // 피 떼어내기 - 드래그로 처리
+                    break;
+                case 2: // 내용물 - 재료 버튼으로 처리
+                    break;
+                case 3: // 말기 (타이밍)
+                    finishRolling();
+                    break;
+                case 4: // 파우더 - 탭 버튼으로 처리
+                    break;
+            }
+        }
+
+        // 1단계 시작 - 당기기 모드 활성화
+        function startCooking() {
+            game.currentStage = 1;
+            game.pullProgress = 0;
+            elements.pullContainer.classList.add('active');
+            elements.pullProgress.style.width = '0%';
+            elements.actionBtn.style.display = 'none';
+            updateUI();
+        }
+
+        // 1단계: 피 떼어내기 완료
+        function flattenDough() {
+            elements.pullContainer.classList.remove('active');
+            elements.cookieVisual.classList.remove('pulling');
+            game.currentStage = 2;
+            game.isPulling = false;
+            // 재료 상태 리셋
+            game.ingredients = { kadaif: false, pistachio: false };
+            elements.kadaifBtn.classList.remove('added');
+            elements.pistachioBtn.classList.remove('added');
+            // 재료 버튼 표시
+            elements.ingredientContainer.classList.add('active');
+            elements.actionBtn.style.display = 'none';
+            updateUI();
+        }
+
+        // 2단계: 재료 추가
+        function addIngredient(type) {
+            if (game.currentStage !== 2) return;
+
+            game.ingredients[type] = true;
+
+            if (type === 'kadaif') {
+                elements.kadaifBtn.classList.add('added');
+            } else {
+                elements.pistachioBtn.classList.add('added');
+            }
+
+            // 둘 다 추가되면 다음 단계로
+            if (game.ingredients.kadaif && game.ingredients.pistachio) {
+                setTimeout(() => {
+                    elements.ingredientContainer.classList.remove('active');
+                    game.currentStage = 3;
+                    startTiming();
+                    updateUI();
+                }, 500);
+            }
+        }
+
+        // 당기기 시작
+        function startPull(y) {
+            if (game.currentStage !== 1) return;
+            game.isPulling = true;
+            game.pullStartY = y;
+            elements.cookieVisual.classList.add('pulling');
+        }
+
+        // 당기기 중
+        function updatePull(y) {
+            if (!game.isPulling || game.currentStage !== 1) return;
+
+            const pullDistance = y - game.pullStartY;
+            game.pullProgress = Math.min(100, Math.max(0, pullDistance / 1.5));
+
+            elements.pullProgress.style.width = game.pullProgress + '%';
+
+            // 100% 도달하면 완료
+            if (game.pullProgress >= 100) {
+                flattenDough();
+            }
+        }
+
+        // 당기기 끝 (중간에 놓으면 리셋)
+        function endPull() {
+            if (!game.isPulling || game.currentStage !== 1) return;
+
+            if (game.pullProgress < 100) {
+                // 리셋
+                game.pullProgress = 0;
+                elements.pullProgress.style.width = '0%';
+                elements.cookieVisual.style.transform = '';
+                elements.cookieVisual.classList.remove('pulling');
+            }
+            game.isPulling = false;
+        }
+
+
+        // 타이밍 시작
+        function startTiming() {
+            game.timingValue = 0;
+            game.timingDirection = 1;
+            elements.timingContainer.classList.add('active');
+
+            game.timingInterval = setInterval(() => {
+                game.timingValue += game.timingDirection * 2;
+                if (game.timingValue >= 100 || game.timingValue <= 0) {
+                    game.timingDirection *= -1;
+                }
+                elements.timingIndicator.style.left = game.timingValue + '%';
+            }, 30);
+        }
+
+        // 3단계: 말기 완료
+        function finishRolling() {
+            clearInterval(game.timingInterval);
+            elements.timingContainer.classList.remove('active');
+
+            // 품질 판정
+            const value = game.timingValue;
+            let quality, qualityName;
+
+            if (value >= 40 && value <= 60) {
+                quality = 'perfect';
+                qualityName = '완벽!';
+            } else if (value >= 25 && value <= 75) {
+                quality = 'good';
+                qualityName = '좋음!';
+            } else if (value >= 15 && value <= 85) {
+                quality = 'normal';
+                qualityName = '보통';
+            } else {
+                quality = 'failed';
+                qualityName = '실패...';
+            }
+
+            game.currentQuality = quality;
+            game.currentStage = 4;
+            // 파우더 탭 시작
+            game.powderProgress = 0;
+            elements.powderFill.style.width = '0%';
+            elements.powderContainer.classList.add('active');
+            elements.actionBtn.style.display = 'none';
+            updateUI();
+        }
+
+        // 4단계: 파우더 탭
+        function tapPowder() {
+            if (game.currentStage !== 4) return;
+
+            game.powderProgress++;
+            const percent = (game.powderProgress / game.powderTarget) * 100;
+            elements.powderFill.style.width = percent + '%';
+
+            // 완료! -> 바로 처음으로
+            if (game.powderProgress >= game.powderTarget) {
+                elements.powderContainer.classList.remove('active');
+                completeCookie();
+                // 바로 처음 단계로 리셋
+                game.currentStage = 0;
+                game.currentQuality = null;
+                elements.actionBtn.style.display = 'block';
+                updateUI();
+            }
+        }
+
+        // 쿠키 완성
+        function completeCookie() {
+            const quality = game.currentQuality || 'normal';
+            const prices = { perfect: 100, good: 70, normal: 50, failed: 20 };
+
+            game.completedCookies.push({
+                quality: quality,
+                price: prices[quality]
+            });
+
+            game.totalCookies++;
+            updateCookieStorage();
+        }
+
+        // 스테이션 리셋
+        function resetStation() {
+            game.currentStage = 0;
+            game.currentQuality = null;
+            updateUI();
+        }
+
+        // UI 업데이트
+        function updateUI() {
+            const stage = stages[game.currentStage];
+            elements.stageTitle.textContent = stage.title;
+            elements.stageInstruction.textContent = stage.instruction;
+            elements.actionBtn.textContent = stage.btn;
+
+            // 쿠키 비주얼 클래스 (이미지는 CSS에서 처리)
+            const stageClasses = ['stage-empty', 'stage-flatten', 'stage-filling', 'stage-rolling', 'stage-powder'];
+            elements.cookieVisual.className = 'cookie-visual ' + stageClasses[game.currentStage];
+
+            // 돈 & 통계
+            elements.money.textContent = game.money.toLocaleString() + '원';
+            elements.totalCookies.textContent = game.totalCookies;
+            elements.totalServed.textContent = game.totalServed;
+        }
+
+        // 쿠키 저장소 업데이트
+        function updateCookieStorage() {
+            if (game.completedCookies.length === 0) {
+                elements.cookieStorage.innerHTML = '<div class="no-customer">아직 완성된 쿠키가 없어요</div>';
+                return;
+            }
+
+            elements.cookieStorage.innerHTML = game.completedCookies.map((cookie, index) => `
+                <div class="stored-cookie cookie-${cookie.quality}" onclick="sellCookie(${index})" title="${cookie.price}원">
+                </div>
+            `).join('');
+        }
+
+        // 쿠키 판매
+        function sellCookie(index) {
+            if (game.customers.length === 0) {
+                alert('손님이 없어요!');
+                return;
+            }
+
+            const cookie = game.completedCookies[index];
+            const customer = game.customers[0];
+
+            // 판매
+            const reward = cookie.price + Math.floor(customer.patience / 10);
+            game.money += reward;
+            game.totalServed++;
+
+            // 제거
+            game.completedCookies.splice(index, 1);
+            game.customers.shift();
+
+            updateCookieStorage();
+            updateCustomerList();
+            updateUI();
+        }
+
+        // 손님 생성
+        function spawnCustomer() {
+            if (game.customers.length >= game.maxCustomers) return;
+
+            const emojis = ['😊', '😄', '🥰', '😋', '🤤', '😍'];
+            const customer = {
+                emoji: emojis[Math.floor(Math.random() * emojis.length)],
+                patience: 100,
+                maxPatience: 100,
+                reward: 50 + Math.floor(Math.random() * 30)
+            };
+
+            game.customers.push(customer);
+            updateCustomerList();
+        }
+
+        // 손님 인내심 감소
+        function updateCustomerPatience() {
+            game.customers.forEach((customer, index) => {
+                customer.patience -= 1;
+                if (customer.patience <= 0) {
+                    game.customers.splice(index, 1);
+                }
+            });
+            updateCustomerList();
+        }
+
+        // 손님 목록 업데이트
+        function updateCustomerList() {
+            if (game.customers.length === 0) {
+                elements.customerList.innerHTML = '<div class="no-customer">손님을 기다리는 중...</div>';
+                return;
+            }
+
+            elements.customerList.innerHTML = game.customers.map((customer, index) => {
+                const patiencePercent = (customer.patience / customer.maxPatience) * 100;
+                const patienceColor = patiencePercent > 50 ? '#2ecc71' : patiencePercent > 25 ? '#f39c12' : '#e74c3c';
+
+                return `
+                    <div class="customer">
+                        <div class="customer-emoji">${customer.emoji}</div>
+                        <div class="customer-info">
+                            <div class="customer-order">두쫀쿠 1개 주세요!</div>
+                            <div class="customer-patience">
+                                <div class="patience-bar" style="width: ${patiencePercent}%; background: ${patienceColor}"></div>
+                            </div>
+                        </div>
+                        <div class="customer-reward">${customer.reward}원</div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        // 게임 초기화
+        function init() {
+            updateUI();
+            updateCookieStorage();
+            updateCustomerList();
+
+            // 손님 생성 (5초마다)
+            game.customerSpawnInterval = setInterval(spawnCustomer, 5000);
+
+            // 손님 인내심 감소 (1초마다)
+            setInterval(updateCustomerPatience, 1000);
+
+            // 첫 손님 바로 생성
+            setTimeout(spawnCustomer, 1000);
+
+            // 당기기 이벤트 (마우스)
+            elements.cookieVisual.addEventListener('mousedown', (e) => {
+                startPull(e.clientY);
+            });
+            document.addEventListener('mousemove', (e) => {
+                updatePull(e.clientY);
+            });
+            document.addEventListener('mouseup', () => {
+                endPull();
+            });
+
+            // 당기기 이벤트 (터치 - 모바일)
+            elements.cookieVisual.addEventListener('touchstart', (e) => {
+                startPull(e.touches[0].clientY);
+            });
+            document.addEventListener('touchmove', (e) => {
+                updatePull(e.touches[0].clientY);
+            });
+            document.addEventListener('touchend', () => {
+                endPull();
+            });
+        }
+
+        // 시작
+        init();
+    </script>
+</body>
+</html>
