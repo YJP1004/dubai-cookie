@@ -957,11 +957,17 @@
 
             // 당기기 이벤트 (터치 - 모바일)
             elements.cookieVisual.addEventListener('touchstart', (e) => {
+                if (game.currentStage === 1) {
+                    e.preventDefault(); // 화면 스크롤 방지
+                }
                 startPull(e.touches[0].clientY);
-            });
+            }, { passive: false });
             document.addEventListener('touchmove', (e) => {
+                if (game.isPulling) {
+                    e.preventDefault(); // 당기는 중 화면 스크롤 방지
+                }
                 updatePull(e.touches[0].clientY);
-            });
+            }, { passive: false });
             document.addEventListener('touchend', () => {
                 endPull();
             });
