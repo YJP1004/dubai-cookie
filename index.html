@@ -708,7 +708,7 @@
             if (!game.isPulling || game.currentStage !== 1) return;
 
             const pullDistance = x - game.pullStartX;
-            game.pullProgress = Math.min(100, Math.max(0, pullDistance / 1.5));
+            game.pullProgress = Math.min(100, Math.max(0, pullDistance / 2));
 
             elements.pullProgress.style.width = game.pullProgress + '%';
 
@@ -936,13 +936,13 @@
             updateCustomerList();
 
             // 손님 생성 (5초마다)
-            game.customerSpawnInterval = setInterval(spawnCustomer, 5000);
+            game.customerSpawnInterval = setInterval(spawnCustomer, 7000);
 
             // 손님 인내심 감소 (1초마다)
             setInterval(updateCustomerPatience, 1000);
 
             // 첫 손님 바로 생성
-            setTimeout(spawnCustomer, 1000);
+            setTimeout(spawnCustomer, 2000);
 
             // 당기기 이벤트 (마우스)
             elements.cookieVisual.addEventListener('mousedown', (e) => {
